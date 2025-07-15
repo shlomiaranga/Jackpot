@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Crazy Time Style Jackpot Wheel</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; background: #222; color: white; }
+  #wheel { margin: 30px auto; width: 300px; height: 300px; border-radius: 50%; border: 10px solid #ffcc00; position: relative; }
+  #spinBtn { padding: 10px 20px; font-size: 18px; margin-top: 20px; background: #ffcc00; border: none; border-radius: 5px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Crazy Time Style Jackpot Wheel (Demo)</h1>
+<div id="wheel">
+  <canvas id="wheelCanvas" width="300" height="300"></canvas>
+</div>
+<button id="spinBtn">Spin the Wheel!</button>
+<p id="result"></p>
+
+<script>
+const wheelCanvas = document.getElementById('wheelCanvas');
+const ctx = wheelCanvas.getContext('2d');
+const segments = [
+  {label:'1', color:'#1E90FF'},
+  {label:'2', color:'#FF69B4'},
+  {label:'5', color:'#32CD32'},
+  {label:'10', color:'#FFA500'},
+  {label:'Plinko', color:'#FF4500'},
+  {label:'This or That', color:'#8A2BE2'},
+  {label:'Blind Prize', color:'#00CED1'},
+  {label:'Huge Jackpot', color:'#FFD700'}
+];
+const segmentAngle = 2 * Math.PI / segments.length;
+let startAngle = 0;
+let spinning = false;
+let spinTimeout;
+
+function drawWheel() {
+  const radius = 140;
+  ctx.clearRect(0,0,300,300);
+  for(let i=0; i<segments.length; i++){
+    let angle = startAngle + i * segmentAngle;
+    ctx.beginPath();
+    ctx.fillStyle = segments[i].color;
+    ctx.moveTo(150,150);
+    ctx.arc(150,150,radius,angle,angle+segmentAngle);
+    ctx.lineTo(150,150);
+    ctx.fill();
+
+    // Draw text
+    ctx.save();
+    ctx.translate(150,150);
+    ctx.rotate(angle + segmentAngle/2);
+    ctx.fillStyle = "white";
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(segments[i].label, radius - 10, 5);
+    ctx.restore();
+  }
+}
+
+function spin() {
+  if(spinning) return;
+  spinning = true;
+  let spinDuration = 4000;
+  let startTime = null;
+
+  function animate(timestamp) {
+    if(!startTime) startTime = timestamp;
+    let elapsed = timestamp - startTime;
+    let spinAngle = easeOut(elapsed, 0, 10 * 2 * Math.PI, spinDuration);
+    startAngle = spinAngle % (2*Math.PI);
+    drawWheel();
+
+    if(elapsed < spinDuration){
+      spinTimeout = requestAnimationFrame(animate);
+    } else {
+      spinning = false;
+      showResult();
+    }
+  }
+  spinTimeout = requestAnimationFrame(animate);
+}
+
+function easeOut(t, b, c, d) {
+  t /= d;
+  t--;
+  return c*(t*t*t + 1) + b;
+}
+
+function showResult() {
+  let index = segments.length - Math.floor(startAngle / segmentAngle) - 1;
+  if(index < 0) index += segments.length;
+  document.getElementById('result').textContent = 'Wheel stopped on: ' + segments[index].label;
+}
+
+document.getElementById('spinBtn').addEventListener('click', spin);
+drawWheel();
+</script>
+</body>
+</html>
